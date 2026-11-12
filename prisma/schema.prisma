@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  username           String?            @unique
+  password           String?
+  name               String?
+  phone              String?
+  role               Role               @default(USER)
+  emailVerified      Boolean            @default(false)
+  verificationToken  String?
+  furnitureRequests  FurnitureRequest[]
+  serviceRequests    ServiceRequest[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@map("users")
+}
+
+model Furniture {
+  id                    String             @id @default(cuid())
+  furniture_name        String
+  furniture_type        String
+  furniture_price       Float
+  furniture_description String
+  special_description   String?
+  furniture_image       String?
+  requests              FurnitureRequest[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@map("furniture")
+}
+
+model FurnitureRequest {
+  id                 String    @id @default(cuid())
+  userId             String?
+  user               User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  furnitureId        String
+  furniture          Furniture @relation(fields: [furnitureId], references: [id], onDelete: Cascade)
+  fullName           String?
+  email              String
+  phoneNumber        String
+  notes              String?
+  status             String    @default("PENDING")
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@map("furniture_requests")
+}
+
+model ServiceRequest {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  fullName    String
+  email       String
+  phoneNumber String
+  serviceType String
+  message     String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("service_requests")
+}
